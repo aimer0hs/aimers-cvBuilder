@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Name — Resume</title>
+  <style>
+    :root{
+      /* Dark Theme */
+      --bg:#0a0a1f;
+      --accent:#1abc9c;
+      --warm:#f39c12;
+      --red:#e74c3c;
+      --card-bg: linear-gradient(160deg, rgba(30, 35, 70, 0.95), rgba(15, 20, 50, 0.95));
+      --card-border: rgba(255, 255, 255, 0.1);
+      --card-shadow: rgba(2, 6, 23, 0.7);
+      --muted: rgba(255, 255, 255, 0.08);
+      --text-main: #fff;
+      --text-muted: #ddd;
+      --text-accent: #cfeee0;
+      --header-bg: linear-gradient(180deg, rgba(15, 20, 55, 0.98), rgba(10, 15, 41, 0.95));
+    }
+    
+    body.light-mode {
+      --bg: #87CEEB;
+      --accent: #2D9CDB;
+      --warm: #f39c12;
+      --red: #EB5757;
+      --card-bg: rgba(255, 255, 255, 0.92);
+      --card-border: #011f3b;
+      --card-shadow: rgba(1, 31, 59, 0.3);
+      --muted: rgba(0, 0, 0, 0.08);
+      --text-main: #011f3b;
+      --text-muted: #013a6b;
+      --text-accent: #2D9CDB;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; padding:0; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background: var(--bg); color: var(--text-main);
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      transition: background 300ms ease, color 300ms ease;
+    }
+    
+    #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+
+    header{
+      padding:20px 16px; text-align:center; position: relative; z-index: 10;
+      transition: background 300ms ease;
+    }
+    
+    body.light-mode header {
+        background: #3a7ca5;
+        backdrop-filter: blur(5px);
+        border-bottom: 3px solid #1d3557;
+    }
+    body.dark-mode header {
+        background: var(--header-bg);
+    }
+
+    #profileImgContainer{display:inline-block;position:relative;cursor:pointer}
+    #profileImg{
+      width:140px;height:140px;border-radius:50%;object-fit:cover;border:4px solid;display:block;margin:0 auto;
+      transition: border-color 300ms ease, box-shadow 300ms ease, filter 300ms ease, background-color 300ms ease;
+    }
+
+    /* === DARK MODE AVATAR === */
+    body.dark-mode #profileImg{
+        border-color: var(--accent);
+        box-shadow: 0 0 20px rgba(26, 188, 156, 0.4);
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    /* === LIGHT MODE AVATAR === */
+    body.light-mode #profileImg {
+      border-color: var(--warm);
+      box-shadow: 0 0 20px 5px rgba(243, 156, 18, 0.8);
+      background-color: rgba(1, 31, 59, 0.4); 
+    }
+    body.light-mode #profileImg[src*="data:image/svg+xml"] {
+      filter: brightness(0) invert(1) opacity(0.9);
+    }
+    body.light-mode #profileImg:not([src*="data:image/svg+xml"]) {
+      background-color: transparent; 
+      filter: none;
+    }
+
+    #profileImgContainer::after { content: 'Click to change'; position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; opacity: 0; transition: opacity 300ms ease; pointer-events: none; }
+    #profileImgContainer:hover::after { opacity: 1; }
+
+    #deletePfpBtn { position: absolute; bottom: 5px; right: 5px; width: 28px; height: 28px; border-radius: 50%; border: 0; background: var(--red); color: white; cursor: pointer; font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center; opacity: 0; transform: scale(0.8); transition: all 300ms ease; pointer-events: none; z-index: 5; }
+    #profileImgContainer:hover #deletePfpBtn { opacity: 1; transform: scale(1); pointer-events: auto; }
+    #deletePfpBtn:hover { filter: brightness(1.1); }
+
+    #header-info { position: relative; padding: 10px; border-radius: 8px; transition: all 300ms ease; }
+    body.light-mode #header-info.editing { outline: 2px solid var(--warm); box-shadow: 0 0 15px rgba(242, 153, 74, 0.6); }
+    #header-info:hover .header-edit-btn { opacity: 1; }
+    #header-info.editing { background-color: rgba(0,0,0,0.05); }
+    .header-edit-btn { position: absolute; top: 10px; right: 10px; background: var(--warm); color: white; opacity: 0; transition: opacity 300ms ease; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; font-size: 16px; }
+    #header-info.editing .header-edit-btn { display: none; }
+    .header-editor-actions { margin-top: 15px; }
+
+    header h1{ margin:.6rem 0 0;font-size:1.8rem; text-shadow: 0 0 10px rgba(26, 188, 156, 0.3); color: var(--accent); }
+    
+    /* MODIFICATION: Made header text full white in light mode */
+    body.light-mode header h1 { color: #fff; text-shadow: 1px 1px 1px rgba(0,0,0,0.25); }
+    header p{margin:.2rem 0;color: var(--text-muted);font-size:0.95rem}
+    body.light-mode header p { color: #fff; opacity: 0.95; }
+    header .meta{font-size:0.9rem;color:var(--text-accent);margin-top:6px}
+    body.light-mode header .meta { color: #fff; opacity: 0.9; }
+
+    .header-buttons { margin-top: 15px; display: flex; justify-content: center; align-items: center; gap: 20px; }
+    .theme-switcher-wrap { display: flex; align-items: center; gap: 8px; color: var(--text-muted); }
+    body.light-mode .theme-switcher-wrap { color: #fff; }
+    .theme-switcher { position: relative; display: inline-block; width: 50px; height: 26px; }
+    .theme-switcher input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #4a4a6a; transition: .4s; border-radius: 26px; }
+    body.light-mode .slider { background-color: #a3b1c6; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    input:checked + .slider { background-color: var(--accent); }
+    body.light-mode input:checked + .slider { background-color: #012a4a; }
+    input:checked + .slider:before { transform: translateX(24px); }
+
+    .container{ width:88%;max-width:980px;margin:28px auto;background:var(--card-bg);padding:22px;border-radius:10px; position: relative; transition: all 300ms ease; }
+    body.light-mode .container { border: 3px solid var(--card-border); box-shadow: 6px 6px 0 var(--card-shadow); backdrop-filter: blur(5px); }
+    
+    .section{margin-bottom:18px;position:relative}
+    .section-header{display:flex;align-items:center;gap:12px; margin-bottom: 5px;}
+
+    body.light-mode .section-header h2 { font-weight: 800; font-size: 1.3rem; text-shadow: 2px 2px 0 var(--text-main); -webkit-font-smoothing: auto; -moz-osx-font-smoothing: auto; border: none; }
+    .section-header h2{ margin:0;color:var(--warm); border-bottom:3px solid; border-image: linear-gradient(90deg, var(--accent), var(--warm), transparent) 1; padding-bottom:5px;font-size:1.2rem; }
+
+    .add-btn{ display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%; border:0;background:var(--accent);color:#fff;cursor:pointer;font-size:20px;margin-left:auto; opacity:0.98; transition: all 200ms ease; }
+    .add-btn:hover { transform: scale(1.1); filter: brightness(1.1); }
+
+    .row{ background:rgba(255, 255, 255, 0.03); padding:12px;border-radius:8px;margin-top:10px;position:relative;padding-right:110px; opacity:0;transform:translateY(8px);animation:fadeIn 360ms ease forwards; transition: all 250ms ease; }
+    body.light-mode .row { background: #fff; border: 2px solid var(--card-border); box-shadow: 3px 3px 0 var(--card-shadow); }
+    body.light-mode .row:hover { transform: translateY(-4px) translateX(-2px); box-shadow: 7px 7px 0 var(--card-shadow); }
+
+    @keyframes fadeIn{to{opacity:1;transform:none}}
+    .row.removing{animation:fadeOut 260ms ease forwards}
+    @keyframes fadeOut{to{opacity:0;transform:translateY(6px);height:0;margin:0;padding:0}}
+    .row.editing { border-color: var(--warm) !important; outline: 2px solid var(--warm) !important; box-shadow: 0 0 15px rgba(242, 153, 74, 0.6) !important; }
+
+    .row-content{white-space:pre-wrap}
+
+    .edit-btn,.delete-btn{ display: none; align-items: center; justify-content: center; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); border: 0; color: #fff; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; transition: all 200ms ease; }
+    .edit-btn:hover, .delete-btn:hover { transform: translateY(-50%) scale(1.15); filter: brightness(1.15); }
+    .edit-btn{background:var(--warm);right:54px}
+    .delete-btn{background:var(--red);right:12px}
+
+    .row:hover .edit-btn,.row:hover .delete-btn{display:inline-flex}
+    .row.editing .edit-btn,.row.editing .delete-btn{display:none}
+
+    .editor-wrap{margin-top:8px;display:flex;gap:8px;align-items:center}
+    .editor-wrap input[type='text'], .editor-wrap textarea, .header-editor input, .header-editor textarea { flex:1;padding:8px;border-radius:6px;border:1px solid var(--muted);background:rgba(0,0,0,0.03);color: var(--text-main); width: 100%; display: block; margin-bottom: 8px; font-family: inherit; font-size: 0.95rem; }
+    .editor-wrap input[type='range']{width:150px}
+
+    .editor-actions{display:flex;gap:8px}
+    .btn{background:var(--accent);border:0;color:#fff;cursor:pointer;padding:8px 14px;border-radius:6px; font-weight: bold; transition: filter 200ms ease;}
+    .btn:hover { filter: brightness(1.1); }
+    .btn.small{padding:6px 8px;font-size:0.85rem}
+    .btn.cancel{background:#6c757d;color:#fff}
+
+    .skills .bar{background:rgba(0,0,0,0.07);height:14px;border-radius:8px;overflow:hidden;border:1px solid rgba(0,0,0,0.05)}
+    .skills .bar-fill{ height:100%;display:block;width:0%; position: relative; overflow: hidden; -webkit-print-color-adjust:exact;print-color-adjust:exact; }
+    .skills .bar-fill::after { content: ''; position: absolute; top: 0; left: -50%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); animation: sheen 2.5s infinite; animation-delay: calc(var(--idx, 0) * 150ms); }
+    @keyframes sheen { from { left: -100%; } to { left: 100%; } }
+
+    .contact-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+    .contact-grid .row { margin-top: 0; }
+
+    @media(max-width:680px){
+      .container{width:95%;padding:14px}
+      header img{width:110px;height:110px}
+      .row{padding-right:84px}
+      .add-btn{width:30px;height:30px}
+      .contact-grid { grid-template-columns: 1fr; }
+    }
+    
+    /* UNIFIED PDF STYLES */
+    @media print{
+      @page { margin: 0.7in; }
+      :root { --print-text: #222; --print-accent: #006856; --print-heading-font: Georgia, 'Times New Roman', Times, serif; --print-body-font: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+      body{ background: #fff !important; color: var(--print-text); font-family: var(--print-body-font); }
+      #bg-canvas, .header-edit-btn, .add-btn, .edit-btn, .delete-btn, #downloadBtn, #profileImgContainer::after, #deletePfpBtn, .theme-switcher-wrap { display:none !important; }
+      #profileImg, #profileImgContainer { display: block !important; }
+      .page-wrapper { border: 4px double #ccc; padding: 0.5in; }
+      header { display: flex; align-items: center; gap: 25px; background: transparent !important; border-bottom: 2px solid #ddd !important; padding: 0 0 15px 0; margin: 0 0 20px 0; text-align: left; backdrop-filter: none; box-shadow: none; }
+      #header-info { padding: 0; }
+      header h1, header p, header .meta { color: var(--print-text) !important; margin: 0; }
+      header h1 { color: var(--print-accent) !important; font-family: var(--print-heading-font); text-shadow: none !important; font-size: 2.1rem; }
+      header p { font-size: 1rem; font-style: italic; margin: 4px 0; }
+      
+      #profileImg {
+          width: 125px !important;
+          height: 125px !important;
+          box-shadow: none !important;
+          border-color: var(--print-accent) !important;
+          filter: none !important;
+          background-color: transparent !important;
+      }
+      #profileImg[src*="data:image/svg+xml"] {
+          filter: grayscale(1) brightness(0.2) !important;
+      }
+      
+      .container { width: 100%; max-width: 100%; margin: 0; padding: 0; background: transparent; box-shadow: none !important; border: none !important; backdrop-filter: none; }
+      .section { border-bottom: 1px solid #ddd; padding-bottom: 15px; margin-bottom: 15px; page-break-inside: avoid; }
+      .section:last-of-type { border-bottom: none; }
+      .section-header h2 { color: var(--print-accent) !important; font-family: var(--print-heading-font); border: none !important; padding-bottom: 0; font-size: 1.4rem; text-shadow: none !important; }
+      .row { border: none !important; padding: 6px 0; margin-top: 6px; page-break-inside: avoid; background: transparent !important; box-shadow: none !important; }
+      .row:hover { transform: none; box-shadow: none; }
+      .skills .bar { background: #e9e9e9; border: 1px solid #dcdcdc; height: 10px; }
+      .skills .bar-fill { background: #555 !important; }
+      .skills .bar-fill::after { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+
+  <div class="page-wrapper">
+    <header>
+      <label id="profileImgContainer" for="profilePicInput" title="Click to change profile picture">
+        <img id="profileImg" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0icmdiYSgyNTUsMjU5LDI1OSwwLjcpIj48cGF0aCBkPSJNMTIgMTJjMi4yMSAwIDQtMS4yOSA0LTQgMC0yLjIxLTEuNzktNC00LTQtMi4yMSAwLTQgMS43OS00IDQgMCAyLjIxIDEuNzkgNCA0IDR6bTAgMmMtMi42NyAwLTggMS4zNC04IDR2MmgxNnYtMmMwLTIuNjYtNS4zMy00LTgtNHoiLz48L3N2Zz4=" alt="Profile">
+        <button id="deletePfpBtn" title="Remove picture">✖</button>
+      </label>
+      <input type="file" id="profilePicInput" accept="image/*" style="display:none;">
+
+      <div id="header-info">
+        <div class="header-content">
+          <h1 id="nameTitle">Your Name</h1>
+          <p id="jobTitle">Your Job Title | Field of Expertise</p>
+          <div class="meta" id="metaInfo">📞 (123) 456-7890 &nbsp; | &nbsp; ✉️ your.email@example.com &nbsp; | &nbsp; City, Country &nbsp; | &nbsp; yourwebsite.com</div>
+        </div>
+        <button class="header-edit-btn" title="Edit Info">✎</button>
+      </div>
+
+      <div class="header-buttons">
+        <button id="downloadBtn" class="btn">Download as PDF</button>
+        <div class="theme-switcher-wrap" title="Toggle theme">
+          <span>☀️</span>
+          <label class="theme-switcher">
+            <input type="checkbox" id="themeToggle">
+            <span class="slider"></span>
+          </label>
+          <span>🌙</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="container" id="cvContainer">
+      <!-- HTML sections unchanged -->
+      <section class="about section">
+        <div class="section-header"><h2>About Me</h2><button class="add-btn" title="Add">+</button></div>
+        <div class="row"><div class="row-content">Write a brief and engaging paragraph about yourself. Mention your key skills, your professional passions, and what you aim to achieve in your career. This is your chance to make a strong first impression.</div><button class="edit-btn" title="Edit">✎</button><button class="delete-btn" title="Delete">🗑</button></div>
+      </section>
+      <section class="education section">
+        <div class="section-header"><h2>Education</h2><button class="add-btn" title="Add">+</button></div>
+        <div class="row"><div class="row-content"><strong>Your University</strong> — Degree Name (e.g., B.Sc. in Computer Science)</div><button class="edit-btn" title="Edit">✎</button><button class="delete-btn" title="Delete">🗑</button></div>
+      </section>
+      <section class="experience section">
+        <div class="section-header"><h2>Work Experience</h2><button class="add-btn" title="Add">+</button></div>
+        <div class="row"><div class="row-content"><strong>Company Name</strong> — Your Role (Year - Present)
+A brief description of your responsibilities and key achievements in this role. Quantify your accomplishments where possible.</div><button class="edit-btn" title="Edit">✎</button><button class="delete-btn" title="Delete">🗑</button></div>
+      </section>
+      <section class="skills section">
+        <div class="section-header"><h2>Skills</h2><button class="add-btn" title="Add">+</button></div>
+        <div class="row" data-skill><div class="row-content">Skill One<div class="bar"><span class="bar-fill" style="width:90%;background:var(--accent);--idx:0;"></span></div></div><button class="edit-btn" title="Edit">✎</button><button class="delete-btn" title="Delete">🗑</button></div>
+        <div class="row" data-skill><div class="row-content">Skill Two<div class="bar"><span class="bar-fill" style="width:90%;background:var(--accent);--idx:1;"></span></div></div><button class="edit-btn" title="Edit">✎</button><button class="delete-btn" title="Delete">🗑</button></div>
+        <div class="row" data-skill><div class="row-content">Skill Three<div class="bar"><span class="bar-fill" style="width:70%;background:var(--warm);--idx:2;"></span></div></div><button class="edit-btn" title="Edit">✎</button><button class="delete-btn" title="Delete">🗑</button></div>
+      </section>
+      <section class="languages section">
+          <div class="section-header"><h2>Languages</h2><button class="add-btn" title="Add">+</button></div>
+          <div class="row"><div class="row-content">Language One — Proficiency (e.g., Native)</div><button class="edit-btn" title="Edit">✎</button><button class="delete-btn" title="Delete">🗑</button></div>
+          <div class="row"><div class="row-content">Language Two — Proficiency (e.g., Professional)</div><button class="edit-btn" title="Edit">✎</button><button class="delete-btn" title="Delete">🗑</button></div>
+      </section>
+      <section class="achievements section">
+          <div class="section-header"><h2>Achievements</h2><button class="add-btn" title="Add">+</button></div>
+          <div class="row"><div class="row-content">Describe a significant accomplishment, like winning an award or exceeding a target.</div><button class="edit-btn" title="Edit">✎</button><button class="delete-btn" title="Delete">🗑</button></div>
+          <div class="row"><div class="row-content">Mention another notable achievement, perhaps from a different area of your work or studies.</div><button class="edit-btn" title="Edit">✎</button><button class="delete-btn" title="Delete">🗑</button></div>
+      </section>
+      <section class="projects section">
+          <div class="section-header"><h2>Projects</h2><button class="add-btn" title="Add">+</button></div>
+          <div class="row"><div class="row-content">Describe a key project you worked on, outlining its purpose and your role.</div><button class="edit-btn" title="Edit">✎</button><button class="delete-btn" title="Delete">🗑</button></div>
+          <div class="row"><div class="row-content">Detail another relevant project, focusing on the technologies used and the outcome.</div><button class="edit-btn" title="Edit">✎</button><button class="delete-btn" title="Delete">🗑</button></div>
+      </section>
+      <section class="contact section">
+          <div class="section-header"><h2>Contact</h2><button class="add-btn" title="Add">+</button></div>
+          <div class="contact-grid">
+              <div class="row"><div class="row-content">Phone: (123) 456-7890</div><button class="edit-btn" title="Edit">✎</button><button class="delete-btn" title="Delete">🗑</button></div>
+              <div class="row"><div class="row-content">Email: your.email@example.com</div><button class="edit-btn" title="Edit">✎</button><button class="delete-btn" title="Delete">🗑</button></div>
+              <div class="row"><div class="row-content">Location: City, Country</div><button class="edit-btn" title="Edit">✎</button><button class="delete-btn" title="Delete">🗑</button></div>
+              <div class="row"><div class="row-content">Website: yourwebsite.com</div><button class="edit-btn" title="Edit">✎</button><button class="delete-btn" title="Delete">🗑</button></div>
+          </div>
+      </section>
+    </main>
+  </div> <!-- end page-wrapper -->
+
+  <script>
+    // JS is unchanged
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, Number(v) || 0));
+    const computeColor = p => {
+      const rootStyles = getComputedStyle(document.documentElement);
+      p = clamp(p, 0, 100);
+      if (p < 40) return rootStyles.getPropertyValue('--red').trim();
+      if (p < 70) return rootStyles.getPropertyValue('--warm').trim();
+      return rootStyles.getPropertyValue('--accent').trim();
+    }
+    const escapeHtml = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    function initRow(row) {
+      const editBtn = row.querySelector('.edit-btn');
+      const delBtn = row.querySelector('.delete-btn');
+      const content = row.querySelector('.row-content');
+      const isSkill = row.hasAttribute('data-skill');
+      editBtn && editBtn.addEventListener('click', () => {
+        if (row.classList.contains('editing')) return;
+        row.classList.add('editing');
+        const editor = document.createElement('div');
+        editor.className = 'editor-wrap';
+        if (isSkill) {
+          let originalText = content.childNodes[0] ? content.childNodes[0].textContent.trim() : '';
+          const barFill = content.querySelector('.bar-fill');
+          let origPercent = barFill ? parseInt((barFill.style.width || '0').replace('%', '')) : 50;
+          const nameInput = document.createElement('input'); nameInput.type = 'text'; nameInput.value = originalText;
+          const range = document.createElement('input'); range.type = 'range'; range.min = 0; range.max = 100; range.value = origPercent;
+          const label = document.createElement('span'); label.style.minWidth = '48px'; label.textContent = origPercent + '%';
+          range.addEventListener('input', () => label.textContent = range.value + '%');
+          editor.appendChild(nameInput); editor.appendChild(range); editor.appendChild(label);
+        } else {
+          const ta = document.createElement('textarea'); ta.value = content.textContent.trim(); ta.style.minWidth = '220px'; ta.style.height = '90px';
+          editor.appendChild(ta);
+        }
+        const saveBtn = document.createElement('button'); saveBtn.className = 'btn small'; saveBtn.textContent = 'Save';
+        const cancelBtn = document.createElement('button'); cancelBtn.className = 'btn small cancel'; cancelBtn.textContent = 'Cancel';
+        const actions = document.createElement('div'); actions.className = 'editor-actions';
+        actions.appendChild(saveBtn); actions.appendChild(cancelBtn);
+        editor.appendChild(actions);
+        const closeEditor = () => { row.removeChild(editor); row.classList.remove('editing'); };
+        saveBtn.addEventListener('click', () => {
+          if (isSkill) {
+            const nameInput = editor.querySelector('input[type="text"]');
+            const rangeInput = editor.querySelector('input[type="range"]');
+            const name = nameInput.value.trim() || 'New Skill';
+            const p = clamp(rangeInput.value, 0, 100);
+            const color = computeColor(p);
+            const barFillToUpdate = content.querySelector('.bar-fill');
+            if (barFillToUpdate) { barFillToUpdate.style.width = p + '%'; barFillToUpdate.style.background = color; }
+            content.childNodes[0].textContent = escapeHtml(name) + '\n          ';
+          } else {
+            const textarea = editor.querySelector('textarea');
+            content.textContent = textarea.value.trim() || '—';
+          }
+          closeEditor();
+        });
+        cancelBtn.addEventListener('click', closeEditor);
+        row.appendChild(editor);
+        const firstInput = editor.querySelector('input, textarea');
+        if(firstInput) firstInput.focus();
+      });
+      delBtn && delBtn.addEventListener('click', () => { row.classList.add('removing'); row.addEventListener('animationend', () => row.remove(), { once: true }); });
+    }
+    function initHeaderEditing() {
+      const headerInfo = document.getElementById('header-info');
+      const editBtn = headerInfo.querySelector('.header-edit-btn');
+      const content = headerInfo.querySelector('.header-content');
+      const nameEl = document.getElementById('nameTitle'), titleEl = document.getElementById('jobTitle'), metaEl = document.getElementById('metaInfo');
+      editBtn.addEventListener('click', () => {
+        headerInfo.classList.add('editing');
+        content.style.display = 'none';
+        const editor = document.createElement('div'); editor.className = 'header-editor';
+        const nameInput = document.createElement('input'); nameInput.type = 'text'; nameInput.value = nameEl.textContent;
+        const titleInput = document.createElement('input'); titleInput.type = 'text'; titleInput.value = titleEl.textContent;
+        const metaInput = document.createElement('textarea'); metaInput.value = metaEl.textContent; metaInput.rows = 2;
+        editor.appendChild(nameInput); editor.appendChild(titleInput); editor.appendChild(metaInput);
+        const saveBtn = document.createElement('button'); saveBtn.className = 'btn'; saveBtn.textContent = 'Save';
+        const cancelBtn = document.createElement('button'); cancelBtn.className = 'btn cancel'; cancelBtn.textContent = 'Cancel';
+        const actions = document.createElement('div'); actions.className = 'header-editor-actions editor-actions';
+        actions.appendChild(saveBtn); actions.appendChild(cancelBtn); editor.appendChild(actions);
+        const cleanup = () => { headerInfo.removeChild(editor); content.style.display = 'block'; headerInfo.classList.remove('editing'); }
+        saveBtn.addEventListener('click', () => {
+          nameEl.textContent = nameInput.value.trim() || 'Your Name';
+          titleEl.textContent = titleInput.value.trim() || 'Your Title';
+          metaEl.textContent = metaInput.value.trim() || 'Contact Info';
+          cleanup();
+        });
+        cancelBtn.addEventListener('click', cleanup);
+        headerInfo.appendChild(editor);
+        nameInput.focus();
+      });
+    }
+    document.querySelectorAll('.row').forEach(r => initRow(r));
+    initHeaderEditing();
+    document.querySelectorAll('.add-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const section = btn.closest('section');
+        const isSkillSection = section.classList.contains('skills');
+        const newRow = document.createElement('div'); newRow.className = 'row';
+        if (isSkillSection) {
+          const skillsCount = section.querySelectorAll('[data-skill]').length;
+          newRow.setAttribute('data-skill', '');
+          newRow.innerHTML = `<div class="row-content">New Skill<div class="bar"><span class="bar-fill" style="width:60%;background:${computeColor(60)};--idx:${skillsCount};"></span></div></div><button class="edit-btn" title="Edit">✎</button><button class="delete-btn" title="Delete">🗑</button>`;
+        } else {
+          newRow.innerHTML = '<div class="row-content">New item</div><button class="edit-btn" title="Edit">✎</button><button class="delete-btn" title="Delete">🗑</button>';
+        }
+        const specialContainer = section.querySelector('.contact-grid');
+        (specialContainer || section).appendChild(newRow);
+        initRow(newRow);
+        const editButton = newRow.querySelector('.edit-btn');
+        if (editButton) setTimeout(() => editButton.click(), 50);
+      });
+    });
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (document.querySelector('#header-info.editing, .row.editing')) {
+        alert('Please save or cancel all edits before downloading as a PDF.');
+      } else {
+        window.print();
+      }
+    });
+    const profilePicInput = document.getElementById('profilePicInput');
+    const profileImg = document.getElementById('profileImg');
+    const deletePfpBtn = document.getElementById('deletePfpBtn');
+    const defaultPfpSrc = profileImg.src;
+    profilePicInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => { 
+          profileImg.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    deletePfpBtn.addEventListener('click', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      profileImg.src = defaultPfpSrc; 
+      profilePicInput.value = '';
+    });
+    const themeToggle = document.getElementById('themeToggle');
+    function applyTheme(theme) {
+      document.body.classList.toggle('light-mode', theme === 'light');
+      document.body.classList.toggle('dark-mode', theme !== 'light');
+      themeToggle.checked = theme === 'dark';
+      switchAnimation();
+    }
+    themeToggle.addEventListener('change', () => {
+      const newTheme = themeToggle.checked ? 'dark' : 'light';
+      localStorage.setItem('resume-theme', newTheme);
+      applyTheme(newTheme);
+    });
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [], animationFrameId;
+    const resizeCanvas = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', () => { resizeCanvas(); switchAnimation(); });
+    class Star {
+      constructor() { this.x=Math.random()*canvas.width; this.y=Math.random()*canvas.height; this.vx=Math.random()*0.4-0.2; this.vy=Math.random()*0.4-0.2; this.radius=1.5; }
+      update() { this.x+=this.vx; this.y+=this.vy; if (this.x<0||this.x>canvas.width)this.vx*=-1; if (this.y<0||this.y>canvas.height)this.vy*=-1; }
+      draw() { ctx.beginPath(); ctx.arc(this.x,this.y,this.radius,0,Math.PI*2); ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.fill(); }
+    }
+    const initStars = () => { particles=[]; const n=Math.min(100,Math.floor(window.innerWidth/20)); for(let i=0;i<n;i++)particles.push(new Star()); }
+    const animateStars = () => {
+      ctx.clearRect(0,0,canvas.width,canvas.height); particles.forEach(p=>{p.update();p.draw();});
+      const d=120;
+      for(let i=0;i<particles.length;i++)for(let j=i+1;j<particles.length;j++){
+        const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<d){ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);ctx.strokeStyle=`rgba(255,255,255,${1-dist/d})`;ctx.lineWidth=0.5;ctx.stroke();}}
+      animationFrameId=requestAnimationFrame(animateStars);
+    }
+    class Cloud {
+      constructor() {
+        this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height * 0.9; this.vx = 0.15 + Math.random() * 0.2;
+        this.size = 25 + Math.random() * 30; this.opacity = 0.3 + Math.random() * 0.4; this.puffs = []; this.initPuffs();
+      }
+      initPuffs() {
+        const puffCount = 5 + Math.floor(Math.random() * 5);
+        for (let i = 0; i < puffCount; i++) {
+          this.puffs.push({offsetX: (Math.random()*2-1)*this.size*0.8, offsetY: (Math.random()*2-1)*this.size*0.4, radius: this.size*(0.6+Math.random()*0.4)});
+        }
+      }
+      update() {
+        this.x += this.vx;
+        if (this.x - this.size * 2 > canvas.width) { this.x = -this.size * 2.5; this.y = Math.random() * canvas.height * 0.9; }
+      }
+      draw() {
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`; ctx.beginPath();
+        this.puffs.forEach(puff => {
+          ctx.moveTo(this.x + puff.offsetX, this.y + puff.offsetY);
+          ctx.arc(this.x + puff.offsetX, this.y + puff.offsetY, puff.radius, 0, Math.PI * 2);
+        });
+        ctx.closePath(); ctx.fill();
+      }
+    }
+    const initClouds = () => { particles = []; const n = Math.min(15, Math.floor(window.innerWidth / 80)); for (let i = 0; i < n; i++) particles.push(new Cloud()); }
+    const animateClouds = () => { ctx.clearRect(0, 0, canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); animationFrameId = requestAnimationFrame(animateClouds); }
+    const switchAnimation = () => {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      const isLight = document.body.classList.contains('light-mode');
+      isLight ? initClouds() : initStars();
+      isLight ? animateClouds() : animateStars();
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      resizeCanvas();
+      const savedTheme = localStorage.getItem('resume-theme');
+      const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+      applyTheme(savedTheme || (prefersLight ? 'light' : 'dark'));
+    });
+  </script>
+</body>
+</html>
